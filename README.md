@@ -1,33 +1,76 @@
-# Vehicle Detection
+## Advanced Lane Finding
 [![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 
+The goals / steps of this project are the following:  
 
-In this project, your goal is to write a software pipeline to detect vehicles in a video (start with the test_video.mp4 and later implement on full project_video.mp4), but the main output or product we want you to create is a detailed writeup of the project.  Check out the [writeup template](https://github.com/udacity/CarND-Vehicle-Detection/blob/master/writeup_template.md) for this project and use it as a starting point for creating your own writeup.  
+* Compute the camera calibration matrix and distortion coefficients given a set of chessboard images.
+* Apply the distortion correction to the raw image.  
+* Use color transforms, gradients, etc., to create a thresholded binary image.
+* Apply a perspective transform to rectify binary image ("birds-eye view"). 
+* Detect lane pixels and fit to find lane boundary.
+* Determine curvature of the lane and vehicle position with respect to center.
+* Warp the detected lane boundaries back onto the original image.
+* Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
-Creating a great writeup:
 ---
-A great writeup should include the rubric points as well as your description of how you addressed each point.  You should include a detailed description of the code used in each step (with line-number references and code snippets where necessary), and links to other supporting documents or external references.  You should include images in your writeup to demonstrate how your code works with examples.  
 
-All that said, please be concise!  We're not looking for you to write a book here, just a brief description of how you passed each rubric point, and references to the relevant code :). 
+### Dependencies
 
-You can submit your writeup in markdown or use another method and submit a pdf instead.
+This project requires **Python 3.5** and the following Python libraries installed:
 
-The Project
----
+- [Jupyter](http://jupyter.org/)
+- [NumPy](http://www.numpy.org/)
+- [SciPy](https://www.scipy.org/)
+- [scikit-learn](http://scikit-learn.org/)
+- [TensorFlow](http://tensorflow.org)
+- [Matplotlib](http://matplotlib.org/)
+- [Pandas](http://pandas.pydata.org/) 
+- [kersar](http://kersar.org/) 
 
-The goals / steps of this project are the following:
+Run this command at the terminal prompt to install [OpenCV](http://opencv.org/). 
 
-* Perform a Histogram of Oriented Gradients (HOG) feature extraction on a labeled training set of images and train a classifier Linear SVM classifier
-* Optionally, you can also apply a color transform and append binned color features, as well as histograms of color, to your HOG feature vector. 
-* Note: for those first two steps don't forget to normalize your features and randomize a selection for training and testing.
-* Implement a sliding-window technique and use your trained classifier to search for vehicles in images.
-* Run your pipeline on a video stream (start with the test_video.mp4 and later implement on full project_video.mp4) and create a heat map of recurring detections frame by frame to reject outliers and follow detected vehicles.
-* Estimate a bounding box for vehicles detected.
+## Datasets
+In this project I use two datasets. First is project dataset. It is splitted into [cars](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/vehicles.zip) images and [non-car](non-car images) images. 
 
-Here are links to the labeled data for [vehicle](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/vehicles.zip) and [non-vehicle](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/non-vehicles.zip) examples to train your classifier.  These example images come from a combination of the [GTI vehicle image database](http://www.gti.ssr.upm.es/data/Vehicle_database.html), the [KITTI vision benchmark suite](http://www.cvlibs.net/datasets/kitti/), and examples extracted from the project video itself.   You are welcome and encouraged to take advantage of the recently released [Udacity labeled dataset](https://github.com/udacity/self-driving-car/tree/master/annotations) to augment your training data.  
+<br>
+![png](resouse/1.png)
 
-Some example images for testing your pipeline on single frames are located in the `test_images` folder.  To help the reviewer examine your work, please save examples of the output from each stage of your pipeline in the folder called `ouput_images`, and include them in your writeup for the project by describing what each image shows.    The video called `project_video.mp4` is the video your pipeline should work well on.  
+## step 
+each to do 
 
-**As an optional challenge** Once you have a working pipeline for vehicle detection, add in your lane-finding algorithm from the last project to do simultaneous lane-finding and vehicle detection!
 
-**If you're feeling ambitious** (also totally optional though), don't stop there!  We encourage you to go out and take video of your own, and show us how you would implement this project on a new video!
+
+### Histogram of Oriented Gradients (HOG).
+
+After using the picture pixel, histogram and HOG function, I decided to use only a small amount of HOG function. I extracted from the grayscale image because the grayscale image contains all the structural information. I think it is best to only detect the car through structural information, avoid color information, because the car may have a lot of colors. I try to use color gray space, HLS space and YCrCb color space, and finally, I think YCrCb color space effect is the best.
+
+<br>
+![png](resouse/2.png)
+![png](resouse/3.png)
+![png](resouse/4.png)
+![png](resouse/5.png)
+
+### SVM classifier
+I use the SVM classifier. After the combined data set, I used 8792 car data and 8968 non-car images for training. The results are about 99.44% accurate. I also use StandardScaler to normalize the feature along the result dataset.
+
+### Sliding windows
+For searching cars in an input image I use sliding window technics. It means that I iterate over image area that could contain cars with approximately car sized box and try to classify whether box contain car or not. As cars may be of different sizes due to distance from a camera we need a several amount of box sizes for near and far cars. I use 3 square sliding window sizes of 64, Here is an examples of sliding windows lattices which I use. One of sliding window drawn in blue on each image while rest of the lattice are drawn in black. For computational economy and additional robustness areas of sliding windows don't conver whole image but places where cars appearance is more probable.
+
+<br>
+
+![png](resouse/6.png)
+
+### car positions and sizes
+I use thresholding by average boxes strength to filter out false positives. Here you can see examples of algorithm results. Overlapping by hotboxes shown as heat map where each pixel holds number of overlapped hot boxes.
+
+<br>
+![png](resouse/7.png)
+![png](resouse/8.png)
+
+### Video processing
+Same average boxes algorithm may be used to estimate cars base on last several frames of the video.<br>
+This pipeline for a single image can be applied to the video the same way.
+
+
+### Conclusion
+It is interesting to detect a car with SVM in a sliding window, but it has several drawbacks. Such as the accuracy of the vehicle is not very high detection accuracy, efficiency is very low, it is in some cases can not be a good promotion and produce a lot of false positives. In order to fight this I use a lot of non-car image SVM training. Also sliding the window to slow down the calculation because it requires many classifiers to try each image. Again, in order to calculate the reduction, the entire area of the input image is not scanned. Thus, when the road has another place in the image, such as a strongly curved turn or the camera moves, the sliding window may not be able to detect the car.
